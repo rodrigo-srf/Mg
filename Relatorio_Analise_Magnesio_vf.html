@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Relatório técnico sobre análise de níveis de magnésio (Mg²⁺) para a disciplina de Processamento de Sinais">
+  <title>Análise de Níveis de Magnésio — Relatório</title>
+  <style>
+    /* ===== VARIÁVEIS DE CORES E CONFIGURAÇÕES GERAIS ===== */
+    :root {
+      --bg: #0f1226;
+      --surface: #14183a;
+      --card: #171d47;
+      --ink: #e8ebff;
+      --muted: #b6b9d6;
+      --brand: #6b8bff;
+      --brand-2: #a26bff;
+      --ok: #6df0a6;
+      --warn: #ffd166;
+      --danger: #ff7b7b;
+      --border: rgba(255,255,255,0.15);
+      --border-focus: rgba(255,255,255,0.3);
+      --transition-speed: 0.3s;
+      --border-radius: 18px;
+      --card-padding: 20px;
+      --section-spacing: 32px;
+      --font-size-base: 16px;
+      --line-height: 1.7;
+    }
+
+    /* ===== RESET E CONFIGURAÇÕES GERAIS ===== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: var(--font-size-base);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+      line-height: var(--line-height);
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* ===== ANIMAÇÃO DE FUNDO ===== */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: -20% -10% -10% -20%;
+      background:
+        radial-gradient(1200px 800px at 10% -10%, #202862 0%, transparent 50%),
+        radial-gradient(900px 650px at 100% 0%, #3a1e6b 0%, transparent 40%);
+      filter: saturate(1.2);
+      animation: floatBg 18s ease-in-out infinite alternate;
+      z-index: -1;
+    }
+
+    @keyframes floatBg {
+      0% { transform: translate3d(0,0,0) scale(1) }
+      100% { transform: translate3d(-2%,2%,0) scale(1.03) }
+    }
+
+    /* ===== TIPOGRAFIA ===== */
+    h1 {
+      font-size: clamp(28px, 5vw, 36px);
+      line-height: 1.2;
+      margin: 16px 0 8px;
+      font-weight: 700;
+    }
+
+    h2 {
+      font-size: clamp(20px, 3vw, 24px);
+      margin: 0 0 12px;
+      font-weight: 600;
+      color: var(--ink);
+      position: relative;
+      padding-bottom: 10px;
+    }
+
+    h2::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 60px;
+      height: 3px;
+      background: var(--brand);
+      border-radius: 2px;
+    }
+
+    h3 {
+      font-size: clamp(18px, 2.5vw, 20px);
+      margin: 20px 0 10px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    p {
+      margin-bottom: 16px;
+    }
+
+    /* ===== LINKS ===== */
+    a {
+      color: var(--ok);
+      text-decoration: none;
+      transition: opacity var(--transition-speed);
+    }
+
+    a:hover, a:focus {
+      text-decoration: underline;
+      opacity: 0.9;
+      outline: none;
+    }
+
+    a:focus-visible {
+      outline: 2px dashed var(--ok);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    /* ===== ESTRUTURA ===== */
+    .wrap {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 24px;
+      width: 100%;
+    }
+
+    /* ===== BADGES E ELEMENTOS DE DESTAQUE ===== */
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.3px;
+      backdrop-filter: blur(4px);
+      transition: all var(--transition-speed);
+    }
+
+    .subtitle {
+      color: var(--muted);
+      max-width: 70ch;
+      margin-top: 8px;
+      font-size: 17px;
+    }
+
+    /* ===== GRID ===== */
+    .grid {
+      display: grid;
+      gap: 20px;
+    }
+
+    .grid.cols-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .grid.cols-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 920px) {
+      .grid.cols-3, .grid.cols-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ===== SEÇÕES ===== */
+    section {
+      margin: var(--section-spacing) 0;
+    }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--border-radius);
+      padding: var(--card-padding);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--brand), var(--brand-2));
+      opacity: 0.7;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 32px rgba(0,0,0,0.3);
+    }
+
+    /* ===== HEADER/HERO ===== */
+    header.hero {
+      position: relative;
+      padding: clamp(40px, 8vw, 56px) 24px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(107,139,255,0.18), rgba(162,107,255,0.10));
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+      overflow: hidden;
+    }
+
+    header.hero::after {
+      content: "";
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+      animation: pulse 8s infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.05; transform: scale(1); }
+      100% { opacity: 0.1; transform: scale(1.05); }
+    }
+
+    /* ===== KPIs ===== */
+    .kpi {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
+      transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    }
+
+    .kpi:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 32px rgba(0,0,0,0.25);
+    }
+
+    .kpi strong {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .kpi > div:first-child {
+      font-size: 24px;
+    }
+
+    /* ===== LISTAS ===== */
+    ul, ol {
+      margin: 12px 0 0 24px;
+      padding-left: 8px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    /* ===== CÓDIGO ===== */
+    code, pre {
+      font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      background: #0e1332;
+      border-radius: 12px;
+      border: 1px dashed var(--border);
+      padding: 16px;
+      color: #dfe3ff;
+      overflow: auto;
+      max-height: 560px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ===== DETAILS/SUMMARY ===== */
+    details {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
+      margin-top: 16px;
+      transition: border-color var(--transition-speed);
+    }
+
+    details:hover {
+      border-color: var(--border-focus);
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      padding: 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    summary::before {
+      content: "▶";
+      color: var(--brand);
+      transition: transform var(--transition-speed);
+    }
+
+    details[open] summary::before {
+      transform: rotate(90deg);
+    }
+
+    summary:hover {
+      color: var(--brand);
+    }
+
+    /* ===== PILLS/TAGS ===== */
+    .pill {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      margin: 4px 6px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+      transition: all var(--transition-speed);
+    }
+
+    .pill:hover {
+      background-color: rgba(107,139,255,0.1);
+      border-color: var(--brand);
+      color: var(--ink);
+    }
+
+    /* ===== CALLOUT ===== */
+    .callout {
+      border-left: 4px solid var(--brand);
+      background: rgba(107,139,255,0.07);
+      padding: 16px 20px;
+      border-radius: 8px;
+      color: #e7e9ff;
+      margin: 20px 0;
+      position: relative;
+    }
+
+    .callout::before {
+      content: "ℹ️";
+      position: absolute;
+      left: -12px;
+      top: 16px;
+      background: var(--bg);
+      padding: 0 4px;
+    }
+
+    /* ===== FOOTER ===== */
+    .foot {
+      text-align: center;
+      color: var(--muted);
+      padding: 32px 8px;
+      border-top: 1px dashed var(--border);
+      margin-top: 40px;
+    }
+
+    /* ===== TABELAS ===== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 12px 8px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    tr:hover {
+      background-color: rgba(255,255,255,0.03);
+    }
+
+    /* ===== STAMP ===== */
+    .stamp {
+      float: right;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ===== CHIP ===== */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 14px;
+      transition: all var(--transition-speed);
+    }
+
+    .chip:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: var(--brand);
+      color: var(--ink);
+    }
+
+    /* ===== ANIMAÇÕES DE ENTRADA ===== */
+    .fade {
+      opacity: 0;
+      transform: translateY(8px);
+      animation: fadeIn 0.8s ease forwards;
+    }
+
+    .fade.d2 { animation-delay: 0.12s }
+    .fade.d3 { animation-delay: 0.24s }
+    .fade.d4 { animation-delay: 0.36s }
+
+    @keyframes fadeIn {
+      to { opacity: 1; transform: none }
+    }
+
+    /* ===== BOTÃO DE EXPANDIR ===== */
+    .expand-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--brand);
+      color: var(--bg);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-speed);
+      margin-top: 16px;
+    }
+
+    .expand-button:hover, .expand-button:focus {
+      background: var(--brand-2);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(107,139,255,0.3);
+    }
+
+    .expand-button:focus-visible {
+      outline: 2px dashed var(--ok);
+      outline-offset: 2px;
+    }
+
+    /* ===== MELHORIAS DE ACESSIBILIDADE ===== */
+    /* Aumentar contraste para melhor legibilidade */
+    .card, .kpi, details {
+      background: linear-gradient(180deg, rgba(30,35,65,0.9), rgba(23,29,71,0.9));
+    }
+
+    /* Navegação por teclado */
+    a:focus, button:focus, summary:focus, input:focus, select:focus, textarea:focus {
+      outline: 2px dashed var(--brand);
+      outline-offset: 2px;
+    }
+
+    /* Melhorar contraste de texto */
+    h1, h2, h3, strong, .kpi strong {
+      color: var(--ink);
+    }
+
+    /* ===== RESPONSIVIDADE ===== */
+    @media (max-width: 768px) {
+      .wrap {
+        padding: 16px;
+      }
+
+      .card {
+        padding: 16px;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      .subtitle {
+        font-size: 16px;
+      }
+
+      .kpi {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .kpi > div:first-child {
+        font-size: 20px;
+      }
+    }
+
+    /* ===== OTIMIZAÇÃO PARA IMPRESSÃO ===== */
+    @media print {
+      body {
+        background: white;
+        color: black;
+      }
+
+      body::before {
+        display: none;
+      }
+
+      .wrap {
+        max-width: 100%;
+        padding: 0;
+      }
+
+      .card, header.hero {
+        background: white;
+        color: black;
+        border: 1px solid #ddd;
+        box-shadow: none;
+        page-break-inside: avoid;
+      }
+
+      .card::before, header.hero::after {
+        display: none;
+      }
+
+      h1, h2, h3, strong, .kpi strong, .subtitle, p, li, td, th, .callout, .chip, .pill, .badge, .foot {
+        color: black !important;
+      }
+
+      a {
+        color: #0066cc !important;
+        text-decoration: underline;
+      }
+
+      .border, .card, header.hero, details, table, th, td, .kpi, .chip, .pill, .badge, .foot {
+        border-color: #ddd !important;
+      }
+
+      .callout {
+        border-left-color: #0066cc !important;
+        background: rgba(0, 102, 204, 0.1) !important;
+      }
+
+      .fade {
+        animation: none;
+        opacity: 1;
+        transform: none;
+      }
+
+      details {
+        border: 1px solid #ddd;
+      }
+
+      summary::before {
+        color: black;
+      }
+
+      .grid {
+        display: block;
+        gap: 0;
+      }
+
+      .grid > div {
+        margin-bottom: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero fade">
+      <span class="badge">Disciplina — Processamento de Sinais • Relatório técnico</span>
+      <h1>📈 Análise de Níveis de Magnésio (Mg²⁺)</h1>
+      <p class="subtitle">Entrega em formato HTML apresentável. Este documento resume, explica e justifica o notebook Colab fornecido, incluindo o fluxo de pré‑processamento, métricas calculadas e gráficos gerados automaticamente.</p>
+      <div class="grid cols-3" style="margin-top:20px">
+        <div class="kpi" aria-label="Informações da equipe">
+          <div aria-hidden="true">👥</div>
+          <div>
+            <div>Equipe</div>
+            <strong>Rodrigo Serafim, Luiz Walker, Israel Ribeiro &amp; Erlyck</strong>
+          </div>
+        </div>
+        <div class="kpi" aria-label="Informações da disciplina">
+          <div aria-hidden="true">📘</div>
+          <div>
+            <div>Disciplina</div>
+            <strong>Processamento de Sinais</strong>
+          </div>
+        </div>
+        <div class="kpi" aria-label="Informações do professor">
+          <div aria-hidden="true">🎓</div>
+          <div>
+            <div>Professor</div>
+            <strong>Danilo Miranda Regis</strong>
+          </div>
+        </div>
+      </div>
+      <div class="chip" aria-label="Tema do projeto">🧪 Tema: Mg²⁺ • TRPM7</div>
+      <div class="stamp">Data: 14/08/2025</div>
+    </header>
+
+    <main>
+      <section class="grid cols-2 fade d2">
+        <div class="card">
+          <h2>Introdução ao Magnésio (Mg²⁺)</h2>
+          <p>O <b>magnésio</b> é um cátion essencial envolvido em centenas de reações enzimáticas e processos
+          celulares, como estabilidade do ATP, regulação de canais iônicos, síntese proteica e sinalização
+          intracelular. Em sistemas excitatórios e gliais, variações de Mg²⁺ podem <b>modular a condução iônica</b>,
+          influenciar a excitabilidade e servir como <b>marcador indireto</b> de processos biofísicos.
+          Em dados experimentais, séries de Mg²⁺ costumam apresentar ruído, descontinuidades e valores
+          extremos — o que demanda <b>pré‑processamento criterioso</b> antes de qualquer interpretação.</p>
+          <p>Neste trabalho, estruturamos uma pipeline para <b>limpeza, padronização e análise</b> de séries de Mg²⁺,
+          com foco em <b>reprodutibilidade</b> e <b>auditoria</b> dos passos aplicados.</p>
+        </div>
+        <div class="card">
+          <h2>Objetivo</h2>
+          <p>Criar uma <b>pipeline reprodutível</b> para leitura e análise de séries de Magnésio (Mg²⁺) a partir de CSV, com:</p>
+          <ul>
+            <li>Detecção automática de <i>encoding</i>, separador e decimal;</li>
+            <li><b>Pré‑processamento</b> opcional (clip, outliers, normalização, ganho/offset, reamostragem, mediana móvel);</li>
+            <li>Conversão de <b>unidades</b> (mg/dL ↔ mmol/L);</li>
+            <li>Cálculo de <b>métricas</b> (estatísticas, variação %, outliers por IQR e z‑score dinâmico);</li>
+            <li>Geração de <b>gráficos interativos</b> e de um <b>relatório HTML</b> com <b>CSVs embutidos</b>.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="card fade d3">
+        <h2>Metodologia — modelo TRPM7 (baseado em Michalis Mentin)</h2>
+        <p>Adotamos uma abordagem de análise orientada a séries temporais inspirada em descrições da
+        <b>corrente TRPM7</b> na literatura especializada (atribuída aqui a <b>Michalis Mentin</b> no contexto do projeto),
+        tratando as variações de Mg²⁺ como um <b>sinal mensurável</b> sujeito a ruído e outliers. Em alto nível, seguimos:</p>
+        <ol>
+          <li><b>Aquisição/Upload</b> do CSV e <b>detecção robusta</b> do formato (encoding, separador, vírgula/ponto decimal).</li>
+          <li><b>Padronização de unidades</b> (mg/dL ↔ mmol/L) para comparabilidade entre séries.</li>
+          <li><b>Pré‑processamento modular</b>:
+            <ul>
+              <li>Recorte por faixa (<i>clip</i>) para valores fisicamente plausíveis;</li>
+              <li>Remoção de <b>outliers</b> (IQR global) e <b>anomalias dinâmicas</b> via z‑score em janela móvel (sinal não‑estacionário);</li>
+              <li><b>Normalização</b> (Z‑score, Min‑Max ou robusta) conforme a análise pretendida;</li>
+              <li>Ajuste <b>ganho/offset</b> e <b>denoise</b> por mediana móvel;</li>
+              <li><b>Reamostragem temporal</b> quando há coluna de tempo (ex.: 1min, 5s, 1h).</li>
+            </ul>
+          </li>
+          <li><b>Caracterização estatística</b> (média, desvio, quartis, variação %) e marcação de eventos (entradas/saídas da faixa de referência).</li>
+          <li><b>Relato interativo</b> com <b>gráficos Plotly</b> (evolução, histograma, boxplot) e <b>CSVs</b> embutidos para auditoria.</li>
+        </ol>
+        <div class="callout">
+          Observação: esta seção descreve a <b>metodologia de análise de sinais</b> adotada no projeto com inspiração no comportamento do canal TRPM7; não constitui validação fisiológica de parâmetros específicos do canal.
+        </div>
+      </section>
+
+      <section class="card fade d3">
+        <h2>Como Executar no Google Colab</h2>
+        <ol>
+          <li>Abrir um novo notebook em <b>Google Colab</b>.</li>
+          <li>Colar o <b>código do notebook</b> (ver "Código completo").</li>
+          <li>Executar a primeira célula e <b>enviar seu CSV</b> quando solicitado.</li>
+          <li>Selecionar colunas, unidades e parâmetros de pré‑processamento.</li>
+          <li>Clicar em <b>"Rodar análise (1 arquivo)"</b> para gerar o <b>relatório HTML</b> com gráficos e CSVs.</li>
+        </ol>
+        <div class="chip">💡 Dica: o HTML pode ser entregue diretamente ao professor ou impresso em PDF.</div>
+      </section>
+
+      <section class="grid cols-2 fade d4">
+        <div class="card">
+          <h2>Entradas & Pré‑processamento</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Entrada</th>
+                <th>Descrição</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>CSV</td>
+                <td>Leitura robusta via <code>chardet</code> e tentativas de separador/decimal.</td>
+              </tr>
+              <tr>
+                <td>Coluna Mg</td>
+                <td>Detecção por padrões ("mg", "magnésio", "magnesium", "mg2+") ou seleção manual.</td>
+              </tr>
+              <tr>
+                <td>Tempo</td>
+                <td>Opcional (data/hora, timestamp ou índice); habilita reamostragem.</td>
+              </tr>
+              <tr>
+                <td>Unidades</td>
+                <td>Conversão por <code>1 mg/dL = 0,4114 mmol/L</code>.</td>
+              </tr>
+            </tbody>
+          </table>
+          <h3>Etapas (ordem aplicada)</h3>
+          <div>
+            <span class="pill">Clip por faixa</span>
+            <span class="pill">Outliers (IQR / z‑score)</span>
+            <span class="pill">Normalização</span>
+            <span class="pill">Ganho & Offset</span>
+            <span class="pill">Reamostragem</span>
+            <span class="pill">Mediana móvel</span>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Métricas & Visualizações</h2>
+          <ul>
+            <li><b>Estatísticas</b>: count, média, desvio, min, quartis, máx;</li>
+            <li><b>Variação %</b> (máx vs. mín);</li>
+            <li><b>Outliers</b> IQR e <b>anomalias dinâmicas</b> (z‑score em janela);</li>
+            <li><b>Evolução</b> com média móvel e faixa de referência;</li>
+            <li><b>Histograma</b> & <b>Boxplot</b>.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="card fade d4">
+        <h2>Resultados Esperados & Limitações</h2>
+        <ul>
+          <li>Redução de ruído após filtros; marcação de picos por z‑score.</li>
+          <li>Relatório final com links de download para <b>resumo</b> e <b>série processada</b>.</li>
+          <li><b>Limitações</b>: qualidade do CSV, escolha de janelas e supostos limiares fisiológicos.</li>
+        </ul>
+      </section>
+
+      <section class="card fade d4">
+        <h2>Código completo (para Colab)</h2>
+        <details>
+          <summary>Código completo do notebook</summary>
+          <pre><code># (https://colab.research.google.com/drive/1_3qBHH7UvLCwoILUpCgIRNn-0KGwhV0-#scrollTo=2oL0psYHeGFj)</code></pre>
+        </details>
+        <button class="expand-button" onclick="document.querySelector('details').open = !document.querySelector('details').open">
+          <span id="expand-text">Expandir código</span>
+          <span id="expand-icon">▶</span>
+        </button>
+      </section>
+    </main>
+
+    <footer class="foot fade d4">
+      <div>Disciplina: <b>Processamento de Sinais</b> — HTML gerado para apresentação acadêmica.</div>
+      <div style="margin-top:10px">© 2025 Equipe: Rodrigo Serafim, Luiz Walker, Israel Ribeiro &amp; Erlyck • Prof. Danilo Miranda Regis</div>
+    </footer>
+  </div>
+
+  <script>
+    // Melhorar a acessibilidade do botão de expandir
+    document.querySelector('.expand-button').addEventListener('click', function() {
+      const details = document.querySelector('details');
+      const expandText = document.getElementById('expand-text');
+      const expandIcon = document.getElementById('expand-icon');
+      
+      if (details.open) {
+        expandText.textContent = 'Expandir código';
+        expandIcon.textContent = '▶';
+      } else {
+        expandText.textContent = 'Recolher código';
+        expandIcon.textContent = '▼';
+      }
+    });
+  </script>
+</body>
+</html>
